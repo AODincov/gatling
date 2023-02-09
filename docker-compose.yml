@@ -1,0 +1,39 @@
+version: '3.2'
+
+networks:
+  gatling-study-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.0.0.0/16"
+
+services:
+  influxdb:
+    build: gatling-grafana-docker/influxdb
+    env_file: gatling-grafana-docker/configuration.env
+    ports:
+      - '8086:8086'
+      - '2003:2003'
+    networks:
+      gatling-study-net:
+        ipv4_address: "10.0.0.2"
+
+  grafana:
+    build: gatling-grafana-docker/grafana
+    env_file: gatling-grafana-docker/configuration.env
+    links:
+      - influxdb
+    ports:
+      - '3000:3000'
+    networks:
+      gatling-study-net:
+        ipv4_address: "10.0.0.3"
+
+  target:
+    build: gatling-grafana-docker/target
+    container_name: target
+    ports:
+      - '4578:8080'
+    command:
+      java -jar /testService-1.0-SNAPSHOT.jar
